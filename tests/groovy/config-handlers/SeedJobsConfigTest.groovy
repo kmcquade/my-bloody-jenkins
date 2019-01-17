@@ -25,6 +25,10 @@ my-seed-job:
   triggers:
     pollScm: H/2 * * * *
     periodic: H/1 * * * *
+    artifactory:
+      serverId: artifactory
+      path: /x/y/z
+      schedule: 'H/5 * * * *'
   parameters:
     SIMPLE_STRING: SIMPLE_STRING_VALUE
     SIMPLE_TEXT: |
@@ -57,6 +61,13 @@ my-seed-job:
       type: password
       description: PASSWORD_PARAM
       value: password
+/myfolder/my-seed-job-inside-folder:
+  source:
+    remote: git@github.com:odavid/my-bloody-jenkins.git
+    branch: my-test-branch
+    credentialsId: my-git-key
+  pipeline: src/groovy/Jenkinsfile-config
+
 """)
     configHandler.setup(config)
     def job = jenkins.model.Jenkins.instance.getItem('my-seed-job')
@@ -97,6 +108,10 @@ SIMPLE_TEXT_LINE2
     assertParam(paramsDef, 'PASSWORD_PARAM', hudson.model.PasswordParameterValue, 'PASSWORD_PARAM'){
       assert it.value.toString() == 'password'
     }
+
+    def jobInsideFolder = jenkins.model.Jenkins.instance.getItemByFullName('/myfolder/my-seed-job-inside-folder')
+    assert jobInsideFolder instanceof org.jenkinsci.plugins.workflow.job.WorkflowJob
+
 }
 
 testSeedJobs()
